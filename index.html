@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloom Filter Lab - Interactive Algorithm Explorer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --surface: #ffffff;
+            --surface-dark: #f8fafc;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --border-radius: 8px;
+            --font-mono: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+            color: var(--text);
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .header-content {
+            padding: 32px 40px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            position: relative;
+        }
+
+        .header-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+            opacity: 0.1;
+        }
+
+        .header-main {
+            position: relative;
+            z-index: 1;
+        }
+
+        .app-title {
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.025em;
+        }
+
+        .app-subtitle {
+            font-size: 1.125rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .status-bar {
+            background: var(--surface-dark);
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .filter-info {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            font-family: var(--font-mono);
+        }
+
+        /* Main Layout */
+        .main-content {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-dark);
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: var(--primary);
+        }
+
+        .card-content {
+            padding: 24px;
+        }
+
+        /* Controls */
+        .control-section {
+            margin-bottom: 24px;
+        }
+
+        .control-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            background: var(--surface);
+            color: var(--text);
+            transition: all 0.15s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #475569;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #059669;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            background: #d97706;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--surface-dark);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: transform 0.15s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-value {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: var(--font-mono);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Bit Array Visualization */
+        .visualization-container {
+            background: var(--surface-dark);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .visualization-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .visualization-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .visualization-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .toggle-btn {
+            padding: 4px 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .toggle-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .bit-array {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 2px;
+            margin-bottom: 16px;
+        }
+
+        .bit {
+            aspect-ratio: 1;
+            border: 1px solid #d1d5db;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .bit:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .bit.unset {
+            background: #f9fafb;
+            color: #9ca3af;
+        }
+
+        .bit.set {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border-color: #059669;
+            box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
+        }
+
+        .bit.highlighted {
+            background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+            color: white !important;
+            border-color: #d97706 !important;
+            animation: glow 1s ease-in-out;
+            transform: scale(1.2);
+            z-index: 20;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(245, 158, 11, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.8); }
+        }
+
+        /* Hash Visualization */
+        .hash-steps {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: var(--border-radius);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            margin: 16px 0;
+            border: 2px solid #374151;
+        }
+
+        .hash-step {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            min-height: 24px;
+        }
+
+        .hash-step-label {
+            color: #60a5fa;
+            font-weight: 600;
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        .hash-step-value {
+            background: #374151;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 0 8px;
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .hash-step-arrow {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .hash-step-desc {
+            color: #94a3b8;
+            margin-left: 8px;
+        }
+
+        /* Activity Log */
+        .activity-log {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: var(--border-radius);
+            height: 300px;
+            overflow-y: auto;
+            border: 2px solid #1e293b;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+
+        .log-entry {
+            padding: 8px 16px;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .log-timestamp {
+            color: #64748b;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+            width: 80px;
+        }
+
+        .log-type {
+            font-weight: 600;
+            width: 60px;
+            flex-shrink: 0;
+        }
+
+        .log-request .log-type { color: #3b82f6; }
+        .log-response .log-type { color: #10b981; }
+        .log-error .log-type { color: #ef4444; }
+        .log-info .log-type { color: #f59e0b; }
+
+        .log-message {
+            flex: 1;
+            word-break: break-word;
+        }
+
+        /* Performance Chart */
+        .performance-section {
+            background: var(--surface-dark);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .chart-container {
+            height: 120px;
+            display: flex;
+            align-items: end;
+            gap: 2px;
+            margin-top: 16px;
+            padding: 10px;
+            background: var(--surface);
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, var(--primary), #60a5fa);
+            border-radius: 2px 2px 0 0;
+            min-height: 2px;
+            transition: height 0.3s ease;
+            position: relative;
+        }
+
+        .chart-bar:hover::after {
+            content: attr(data-value);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 320px 1fr;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                order: 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 16px;
+            }
+            .header-content, .status-bar {
+                padding: 24px;
+            }
+            .app-title {
+                font-size: 1.875rem;
+            }
+            .bit-array {
+                grid-template-columns: repeat(15, 1fr);
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .btn-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--surface-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-light);
+        }
+
+        /* Tooltips */
+        [data-tooltip] {
+            position: relative;
+        }
+
+        [data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 5px;
+        }
+
+        [data-tooltip]:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: var(--text);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-main">
+                    <h1 class="app-title">Bloom Filter Lab</h1>
+                    <p class="app-subtitle">Interactive Algorithm Explorer & Real-time Performance Monitor</p>
+                </div>
+            </div>
+            <div class="status-bar">
+                <div class="connection-status">
+                    <div class="status-dot"></div>
+                    <span>Live Algorithm Engine</span>
+                </div>
+                <div class="filter-info" id="filterInfo">
+                    No filter initialized
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar Controls -->
+            <aside class="sidebar">
+                <!-- Filter Configuration -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-cog"></i>
+                            Filter Configuration
+                        </h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="control-section">
+                            <div class="form-group">
+                                <label class="form-label" for="expectedItems">Expected Items</label>
+                                <input type="number" id="expectedItems" class="form-input" value="1000" min="10" max="100000" 
+                                       data-tooltip="Number of items you plan to add to the filter">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="falsePositiveRate">False Positive Rate</label>
+                                <select id="falsePositiveRate" class="form-select" data-tooltip="Probability of false positive results">
+                                    <option value="0.1">10% - Fast & Memory Efficient</option>
+                                    <option value="0.05">5% - Balanced Performance</option>
+                                    <option value="0.01" selected>1% - High Accuracy</option>
+                                    <option value="0.001">0.1% - Maximum Precision</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary btn-full" onclick="initializeFilter()" id="initBtn">
+                                <i class="fas fa-rocket"></i>
+                                Initialize Filter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Items -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-plus-circle"></i>
+                            Add Items
+                        </h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="form-group">
+                            <label class="form-label" for="itemInput">Item to Add</label>
+                            <input type="text" id="itemInput" class="form-input" placeholder="Type anything..." 
+                                   data-tooltip="Enter any text to add to the filter">
+                        </div>
+                        <button class="btn btn-success btn-full" onclick="addSingleItem()" id="addBtn" disabled>
+                            <i class="fas fa-plus"></i>
+                            Add Item
+                        </button>
+                        <div class="btn-group" style="margin-top: 8px;">
+                            <button class="btn btn-secondary" onclick="addRandomItems(10)" id="add10Btn" disabled>
+                                <i class="fas fa-dice"></i>
+                                Add 10
+                            </button>
+                            <button class="btn btn-secondary" onclick="addRandomItems(100)" id="add100Btn" disabled>
+                                <i class="fas fa-bolt"></i>
+                                Add 100
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Check Items -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-search"></i>
+                            Check Membership
+                        </h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="form-group">
+                            <label class="form-label" for="checkInput">Item to Check</label>
+                            <input type="text" id="checkInput" class="form-input" placeholder="Search for item..." 
+                                   data-tooltip="Check if an item exists in the filter">
+                        </div>
+                        <button class="btn btn-primary btn-full" onclick="checkSingleItem()" id="checkBtn" disabled>
+                            <i class="fas fa-magnifying-glass"></i>
+                            Check Item
+                        </button>
+                        <button class="btn btn-warning btn-full" onclick="runFalsePositiveTest()" id="fpTestBtn" disabled style="margin-top: 8px;">
+                            <i class="fas fa-chart-line"></i>
+                            Test False Positives
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Performance Stats
+                        </h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="itemCount">0</div>
+                                <div class="stat-label">Items Added</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="loadFactor">0%</div>
+                                <div class="stat-label">Load Factor</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="opsPerSecond">0</div>
+                                <div class="stat-label">Ops/Second</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="memoryUsage">0 KB</div>
+                                <div class="stat-label">Memory</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Panel -->
+            <main class="main-panel">
+                <!-- Bit Array Visualization -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-grid-3x3"></i>
+                            Live Bit Array Visualization
+                        </h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="visualization-container">
+                            <div class="visualization-header">
+                                <span class="visualization-title">First 200 positions</span>
+                                <div class="visualization-controls">
+                                    <button class="toggle-btn active" onclick="toggleView('grid')" data-tooltip="Grid view">
+                                        <i class="fas fa-th"></i>
+                                    </button>
+                                    <button class="toggle-btn" onclick="toggleView('list')" data-tooltip="List view">
+                                        <i class="fas fa-list"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="bit-array" id="bitArray">
+                                <!-- Bits will be populated here -->
+                            </div>
+                            <div style="display: flex; gap: 16px; font-size: 0.75rem; color: var(--text-light);">
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <div style="width: 12px; height: 12px; background: #f9fafb; border: 1px solid #d1d5db; border-radius: 2px;"></div>
+                                    <span>Unset (0)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <div style="width: 12px; height: 12px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 2px;"></div>
+                                    <span>Set (1)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <div style="width: 12px; height: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 2px;"></div>
+                                    <span>Active Operation</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Hash Visualization -->
+                        <div class="hash-steps" id="hashVisualization" style="display: none;">
+                            <div style="font-weight: 600; margin-bottom: 12px; color: #60a5fa;">
+                                <i class="fas fa-calculator"></i> Hash Function Breakdown
+                            </div>
+                            <div id="hashStepsContainer">
+                                <!-- Hash steps will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Monitor & Performance -->
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                    <!-- Activity Log -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-terminal"></i>
+                                Live Activity Monitor
+                            </h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="activity-log" id="activityLog">
+                                <!-- Log entries will be populated here -->
+                            </div>
+                            <button class="btn btn-secondary" onclick="clearActivityLog()" style="margin-top: 12px; font-size: 0.75rem;">
+                                <i class="fas fa-broom"></i>
+                                Clear Log
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Performance Chart -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-chart-area"></i>
+                                Performance Monitor
+                            </h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="performance-section">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-size: 0.875rem; font-weight: 500;">Operations/Second</span>
+                                    <span id="currentOps" style="font-family: var(--font-mono); font-size: 0.875rem; color: var(--primary);">0</span>
+                                </div>
+                                <div class="chart-container" id="performanceChart">
+                                    <!-- Performance bars will be populated here -->
+                                </div>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px;">
+                                <div style="text-align: center; padding: 12px; background: var(--surface-dark); border-radius: 6px;">
+                                    <div style="font-size: 1.25rem; font-weight: 600; color: var(--success);" id="avgResponseTime">0ms</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-light);">Avg Response</div>
+                                </div>
+                                <div style="text-align: center; padding: 12px; background: var(--surface-dark); border-radius: 6px;">
+                                    <div style="font-size: 1.25rem; font-weight: 600; color: var(--primary);" id="totalOperations">0</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-light);">Total Operations</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced Bloom Filter Implementation
+        class BloomFilter {
+            constructor(expectedItems = 1000, falsePositiveProb = 0.01) {
+                const { m, k } = this.calculateOptimalParams(expectedItems, falsePositiveProb);
+                this.size = m;
+                this.hashCount = k;
+                this.bitArray = new Uint8Array(Math.ceil(m / 8));
+                this.itemCount = 0;
+                this.addedItems = new Set();
+                this.operationTimes = [];
+                this.totalOperations = 0;
+                
+                this.logActivity('SYSTEM', 'Filter initialized', `${m} bits, ${k} hash functions`, 'success');
+            }
+
+            calculateOptimalParams(expectedItems, falsePositiveProb) {
+                if (expectedItems <= 0 || falsePositiveProb <= 0 || falsePositiveProb >= 1) {
+                    throw new Error('Invalid parameters');
+                }
+                const m = Math.ceil(-(expectedItems * Math.log(falsePositiveProb)) / (Math.log(2) ** 2));
+                const k = Math.ceil((m / expectedItems) * Math.log(2));
+                return { m, k };
+            }
+
+            hash1(str) {
+                let hash = 0x12345678;
+                for (let i = 0; i < str.length; i++) {
+                    hash ^= str.charCodeAt(i);
+                    hash = Math.imul(hash, 0x5bd1e995);
+                    hash = hash >>> 0;
+                    hash ^= hash >>> 15;
+                }
+                return hash >>> 0;
+            }
+
+            hash2(str) {
+                let hash = 0x87654321;
+                for (let i = 0; i < str.length; i++) {
+                    hash ^= str.charCodeAt(i);
+                    hash = Math.imul(hash, 0xcc9e2d51);
+                    hash = hash >>> 0;
+                    hash ^= hash >>> 13;
+                }
+                return hash >>> 0;
+            }
+
+            add(item) {
+                const startTime = performance.now();
+                
+                if (typeof item !== 'string') {
+                    throw new Error('Item must be a string');
+                }
+                
+                const h1 = this.hash1(item);
+                const h2 = this.hash2(item);
+                const positions = [];
+                
+                this.logActivity('ADD', 'Processing item', `"${item}"`, 'info');
+                this.logActivity('HASH', 'Computing hashes', `h1=${h1}, h2=${h2}`, 'info');
+                
+                for (let i = 0; i < this.hashCount; i++) {
+                    const combinedHash = (BigInt(h1) + BigInt(i) * BigInt(h2)) % BigInt(this.size);
+                    const index = Number(combinedHash);
+                    
+                    const byteIndex = Math.floor(index / 8);
+                    const bitOffset = index % 8;
+                    const wasBitSet = (this.bitArray[byteIndex] & (1 << bitOffset)) !== 0;
+                    
+                    this.bitArray[byteIndex] |= (1 << bitOffset);
+                    positions.push(index);
+                    
+                    this.logActivity('BIT', `Set position ${index}`, 
+                        wasBitSet ? 'already set' : 'newly set', 'info');
+                }
+                
+                this.itemCount++;
+                this.addedItems.add(item);
+                this.totalOperations++;
+                
+                const endTime = performance.now();
+                const operationTime = endTime - startTime;
+                this.operationTimes.push(operationTime);
+                
+                // Keep only last 100 operation times
+                if (this.operationTimes.length > 100) {
+                    this.operationTimes.shift();
+                }
+                
+                this.logActivity('SUCCESS', 'Item added', 
+                    `${operationTime.toFixed(2)}ms, positions: [${positions.join(', ')}]`, 'success');
+                
+                return { positions, hashDetails: { h1, h2, positions }, operationTime };
+            }
+
+            has(item) {
+                const startTime = performance.now();
+                
+                if (typeof item !== 'string') {
+                    throw new Error('Item must be a string');
+                }
+                
+                const h1 = this.hash1(item);
+                const h2 = this.hash2(item);
+                const positions = [];
+                
+                this.logActivity('CHECK', 'Checking item', `"${item}"`, 'info');
+                this.logActivity('HASH', 'Computing hashes', `h1=${h1}, h2=${h2}`, 'info');
+                
+                for (let i = 0; i < this.hashCount; i++) {
+                    const combinedHash = (BigInt(h1) + BigInt(i) * BigInt(h2)) % BigInt(this.size);
+                    const index = Number(combinedHash);
+                    
+                    const byteIndex = Math.floor(index / 8);
+                    const bitOffset = index % 8;
+                    const isSet = (this.bitArray[byteIndex] & (1 << bitOffset)) !== 0;
+                    
+                    positions.push(index);
+                    
+                    this.logActivity('BIT', `Check position ${index}`, 
+                        isSet ? 'bit is 1' : 'bit is 0', 'info');
+                    
+                    if (!isSet) {
+                        const endTime = performance.now();
+                        const operationTime = endTime - startTime;
+                        this.operationTimes.push(operationTime);
+                        this.totalOperations++;
+                        
+                        this.logActivity('RESULT', 'Definitely NOT in set', 
+                            `${operationTime.toFixed(2)}ms (True Negative)`, 'error');
+                        
+                        return { 
+                            result: false, 
+                            positions, 
+                            type: 'TRUE_NEGATIVE',
+                            hashDetails: { h1, h2, positions },
+                            operationTime,
+                            wasActuallyAdded: false
+                        };
+                    }
+                }
+                
+                const endTime = performance.now();
+                const operationTime = endTime - startTime;
+                this.operationTimes.push(operationTime);
+                this.totalOperations++;
+                
+                // Keep only last 100 operation times
+                if (this.operationTimes.length > 100) {
+                    this.operationTimes.shift();
+                }
+                
+                const wasActuallyAdded = this.addedItems.has(item);
+                const resultType = wasActuallyAdded ? 'TRUE_POSITIVE' : 'FALSE_POSITIVE';
+                
+                this.logActivity('RESULT', 'Probably in set', 
+                    `${operationTime.toFixed(2)}ms (${resultType})`, 
+                    wasActuallyAdded ? 'success' : 'warning');
+                
+                return { 
+                    result: true, 
+                    positions, 
+                    type: resultType,
+                    hashDetails: { h1, h2, positions },
+                    operationTime,
+                    wasActuallyAdded
+                };
+            }
+
+            bulkAdd(items) {
+                const results = [];
+                const startTime = performance.now();
+                
+                this.logActivity('BULK', 'Starting bulk add', `${items.length} items`, 'info');
+                
+                for (const item of items) {
+                    const result = this.add(item);
+                    results.push(result);
+                }
+                
+                const endTime = performance.now();
+                const totalTime = endTime - startTime;
+                const itemsPerSecond = (items.length / totalTime * 1000).toFixed(0);
+                
+                this.logActivity('BULK', 'Bulk add completed', 
+                    `${totalTime.toFixed(2)}ms, ${itemsPerSecond} items/sec`, 'success');
+                
+                return results;
+            }
+
+            getStats() {
+                let setBits = 0;
+                for (let i = 0; i < this.bitArray.length; i++) {
+                    let byte = this.bitArray[i];
+                    while (byte) {
+                        setBits += byte & 1;
+                        byte >>= 1;
+                    }
+                }
+                
+                const loadFactor = setBits / this.size;
+                const expectedFP = Math.pow(loadFactor, this.hashCount);
+                const avgOpTime = this.operationTimes.length > 0 ? 
+                    this.operationTimes.reduce((a, b) => a + b, 0) / this.operationTimes.length : 0;
+                const opsPerSec = avgOpTime > 0 ? 1000 / avgOpTime : 0;
+                
+                return {
+                    size: this.size,
+                    hashCount: this.hashCount,
+                    itemCount: this.itemCount,
+                    totalOperations: this.totalOperations,
+                    loadFactor: loadFactor,
+                    expectedFPRate: expectedFP,
+                    memoryUsage: this.bitArray.length,
+                    setBits: setBits,
+                    avgOpTime: avgOpTime,
+                    opsPerSec: opsPerSec
+                };
+            }
+
+            getBitArrayVisualization(maxBits = 200) {
+                const bits = [];
+                for (let i = 0; i < Math.min(maxBits, this.size); i++) {
+                    const byteIndex = Math.floor(i / 8);
+                    const bitOffset = i % 8;
+                    const isSet = (this.bitArray[byteIndex] & (1 << bitOffset)) !== 0;
+                    bits.push({ index: i, value: isSet ? 1 : 0, isSet });
+                }
+                return bits;
+            }
+
+            logActivity(type, action, details, level = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = { timestamp, type, action, details, level };
+                
+                // Add to activity log in UI
+                if (typeof addLogEntry === 'function') {
+                    addLogEntry(logEntry);
+                }
+            }
+        }
+
+        // Global variables
+        let bloomFilter = null;
+        let performanceHistory = [];
+        let currentView = 'grid';
+
+        // Initialize filter
+        function initializeFilter() {
+            const expectedItems = parseInt(document.getElementById('expectedItems').value);
+            const falsePositiveRate = parseFloat(document.getElementById('falsePositiveRate').value);
+            
+            try {
+                bloomFilter = new BloomFilter(expectedItems, falsePositiveRate);
+                
+                // Update UI
+                updateFilterInfo();
+                updateBitVisualization();
+                updateStats();
+                enableControls();
+                
+                addLogEntry({
+                    timestamp: new Date().toLocaleTimeString(),
+                    type: 'INIT',
+                    action: 'Filter ready',
+                    details: `${bloomFilter.size} bits, ${bloomFilter.hashCount} hash functions`,
+                    level: 'success'
+                });
+                
+            } catch (error) {
+                addLogEntry({
+                    timestamp: new Date().toLocaleTimeString(),
+                    type: 'ERROR',
+                    action: 'Initialization failed',
+                    details: error.message,
+                    level: 'error'
+                });
+            }
+        }
+
+        // Add single item
+        function addSingleItem() {
+            if (!bloomFilter) return;
+            
+            const input = document.getElementById('itemInput');
+            const item = input.value.trim();
+            
+            if (!item) {
+                addLogEntry({
+                    timestamp: new Date().toLocaleTimeString(),
+                    type: 'ERROR',
+                    action: 'Empty input',
+                    details: 'Please enter an item to add',
+                    level: 'error'
+                });
+                return;
+            }
+            
+            try {
+                const result = bloomFilter.add(item);
+                
+                // Show hash visualization
+                showHashBreakdown(item, result.hashDetails);
+                
+                // Highlight bits
+                highlightBits(result.positions);
+                
+                // Update UI
+                updateBitVisualization();
+                updateStats();
+                updatePerformanceChart();
+                
+                // Clear input
+                input.value = '';
+                input.focus();
+                
+            } catch (error) {
+                addLogEntry({
+                    timestamp: new Date().toLocaleTimeString(),
+                    type: 'ERROR',
+                    action: 'Add failed',
+                    details: error.message,
+                    level: 'error'
+                });
+            }
+        }
+
+        // Add random items
+        function addRandomItems(count) {
+            if (!bloomFilter) return;
+            
+            const items = [];
+            for (let i = 0; i < count; i++) {
+                const randomItem = `item_${Math.random().toString(36).substr(2, 6)}_${Date.now()}_${i}`;
+                items.push(randomItem);
+            }
+            
+            const results = bloomFilter.bulkAdd(items);
+            
+            // Update UI
+            updateBitVisualization();
+            updateStats();
+            updatePerformanceChart();
+            
+            // Highlight some positions from last item
+            if (results.length > 0) {
+                const lastResult = results[results.length - 1];
+                highlightBits(lastResult.positions);
+            }
+        }
+
+        // Check single item
+        function checkSingleItem() {
+            if (!bloomFilter) return;
+            
+            const input = document.getElementById('checkInput');
+            const item = input.value.trim();
+            
+            if (!item) {
+                addLogEntry({
+                    timestamp: new Date().toLocaleTimeString(),
+                    type: 'ERROR',
+                    action: 'Empty input',
+                    details: 'Please enter an item to check',
+                    level: 'error'
+                });
+                return;
+            }
+            
+            try {
+                const result = bloomFilter.has(item);
+                
+                // Show hash visualization
+                showHashBreakdown(item, result.hashDetails, true);
+                
+                // Highlight bits
+                highlightBits(result.positions);
+                
+                // Update UI
+                updateStats();
+                updatePerformanceChart();
+                
+                // Clear input
+                input.value = '';
+                input.focus();
+                
+            } catch (error) {
+                addLogEntry({
+                    timestamp: new Date().toLocaleTimeString(),
+                    type: 'ERROR',
+                    action: 'Check failed',
+                    details: error.message,
+                    level: 'error'
+                });
+            }
+        }
+
+        // Run false positive test
+        function runFalsePositiveTest() {
+            if (!bloomFilter) return;
+            
+            const testCount = 1000;
+            let falsePositives = 0;
+            const startTime = performance.now();
+            
+            addLogEntry({
+                timestamp: new Date().toLocaleTimeString(),
+                type: 'TEST',
+                action: 'Starting FP test',
+                details: `Testing ${testCount} random items`,
+                level: 'info'
+            });
+            
+            for (let i = 0; i < testCount; i++) {
+                const testItem = `fp_test_${Math.random().toString(36).substr(2, 10)}_${i}`;
+                const result = bloomFilter.has(testItem);
+                if (result.result && !result.wasActuallyAdded) {
+                    falsePositives++;
+                }
+            }
+            
+            const endTime = performance.now();
+            const testTime = endTime - startTime;
+            const actualFPRate = (falsePositives / testCount * 100);
+            const stats = bloomFilter.getStats();
+            const expectedFPRate = (stats.expectedFPRate * 100);
+            
+            addLogEntry({
+                timestamp: new Date().toLocaleTimeString(),
+                type: 'TEST',
+                action: 'FP test completed',
+                details: `${falsePositives}/${testCount} FPs (${actualFPRate.toFixed(3)}%) in ${testTime.toFixed(2)}ms`,
+                level: 'success'
+            });
+            
+            addLogEntry({
+                timestamp: new Date().toLocaleTimeString(),
+                type: 'ANALYSIS',
+                action: 'Expected vs Actual',
+                details: `Expected: ${expectedFPRate.toFixed(3)}%, Got: ${actualFPRate.toFixed(3)}%`,
+                level: expectedFPRate * 0.5 <= actualFPRate && actualFPRate <= expectedFPRate * 2 ? 'success' : 'warning'
+            });
+            
+            updateStats();
+            updatePerformanceChart();
+        }
+
+        // Show hash breakdown
+        function showHashBreakdown(item, hashDetails, isCheck = false) {
+            const container = document.getElementById('hashStepsContainer');
+            const visualization = document.getElementById('hashVisualization');
+            
+            let html = `
+                <div class="hash-step">
+                    <span class="hash-step-label">Input:</span>
+                    <span class="hash-step-value">"${item}"</span>
+                    <span class="hash-step-arrow">→</span>
+                    <span class="hash-step-desc">${isCheck ? 'Checking membership' : 'Adding to filter'}</span>
+                </div>
+                <div class="hash-step">
+                    <span class="hash-step-label">hash1():</span>
+                    <span class="hash-step-value">${hashDetails.h1}</span>
+                    <span class="hash-step-arrow">→</span>
+                    <span class="hash-step-desc">Primary hash function</span>
+                </div>
+                <div class="hash-step">
+                    <span class="hash-step-label">hash2():</span>
+                    <span class="hash-step-value">${hashDetails.h2}</span>
+                    <span class="hash-step-arrow">→</span>
+                    <span class="hash-step-desc">Secondary hash function</span>
+                </div>
+                <div class="hash-step" style="margin-top: 12px; font-weight: 600;">
+                    <span style="color: #60a5fa;">Double Hashing Formula: (h1 + k × h2) % ${bloomFilter.size}</span>
+                </div>
+            `;
+            
+            hashDetails.positions.forEach((pos, i) => {
+                const calculation = `(${hashDetails.h1} + ${i} × ${hashDetails.h2}) % ${bloomFilter.size}`;
+                html += `
+                    <div class="hash-step">
+                        <span class="hash-step-label">k=${i}:</span>
+                        <span class="hash-step-value">${calculation}</span>
+                        <span class="hash-step-arrow">→</span>
+                        <span class="hash-step-value">${pos}</span>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            visualization.style.display = 'block';
+            
+            // Hide after 6 seconds
+            setTimeout(() => {
+                visualization.style.display = 'none';
+            }, 6000);
+        }
+
+        // Update bit visualization
+        function updateBitVisualization() {
+            if (!bloomFilter) return;
+            
+            const container = document.getElementById('bitArray');
+            const bits = bloomFilter.getBitArrayVisualization(200);
+            
+            container.innerHTML = '';
+            
+            bits.forEach((bit, index) => {
+                const bitElement = document.createElement('div');
+                bitElement.className = `bit ${bit.isSet ? 'set' : 'unset'}`;
+                bitElement.textContent = bit.value;
+                bitElement.setAttribute('data-tooltip', 
+                    `Position ${bit.index}: ${bit.isSet ? 'Set (1)' : 'Unset (0)'}`);
+                
+                bitElement.onclick = () => {
+                    addLogEntry({
+                        timestamp: new Date().toLocaleTimeString(),
+                        type: 'UI',
+                        action: 'Bit clicked',
+                        details: `Position ${bit.index} = ${bit.value}`,
+                        level: 'info'
+                    });
+                };
+                
+                container.appendChild(bitElement);
+            });
+        }
+
+        // Highlight specific bits
+        function highlightBits(positions) {
+            // Clear existing highlights
+            document.querySelectorAll('.bit.highlighted').forEach(bit => {
+                bit.classList.remove('highlighted');
+            });
+            
+            // Add new highlights
+            positions.forEach(pos => {
+                if (pos < 200) {
+                    const bitElements = document.querySelectorAll('.bit');
+                    if (bitElements[pos]) {
+                        bitElements[pos].classList.add('highlighted');
+                        
+                        // Remove highlight after 3 seconds
+                        setTimeout(() => {
+                            if (bitElements[pos]) {
+                                bitElements[pos].classList.remove('highlighted');
+                            }
+                        }, 3000);
+                    }
+                }
+            });
+        }
+
+        // Update stats display
+        function updateStats() {
+            if (!bloomFilter) return;
+            
+            const stats = bloomFilter.getStats();
+            
+            document.getElementById('itemCount').textContent = stats.itemCount.toLocaleString();
+            document.getElementById('loadFactor').textContent = (stats.loadFactor * 100).toFixed(1) + '%';
+            document.getElementById('opsPerSecond').textContent = Math.round(stats.opsPerSec).toLocaleString();
+            document.getElementById('memoryUsage').textContent = (stats.memoryUsage / 1024).toFixed(1) + ' KB';
+            document.getElementById('currentOps').textContent = Math.round(stats.opsPerSec).toLocaleString();
+            document.getElementById('avgResponseTime').textContent = stats.avgOpTime.toFixed(1) + 'ms';
+            document.getElementById('totalOperations').textContent = stats.totalOperations.toLocaleString();
+            
+            // Update filter info in header
+            updateFilterInfo();
+        }
+
+        // Update filter info in header
+        function updateFilterInfo() {
+            if (!bloomFilter) {
+                document.getElementById('filterInfo').textContent = 'No filter initialized';
+                return;
+            }
+            
+            const stats = bloomFilter.getStats();
+            document.getElementById('filterInfo').textContent = 
+                `${stats.size.toLocaleString()} bits | ${stats.hashCount} hashes | ${stats.itemCount.toLocaleString()} items | ${(stats.loadFactor * 100).toFixed(1)}% full`;
+        }
+
+        // Update performance chart
+        function updatePerformanceChart() {
+            if (!bloomFilter) return;
+            
+            const stats = bloomFilter.getStats();
+            performanceHistory.push(stats.opsPerSec);
+            
+            // Keep only last 30 data points
+            if (performanceHistory.length > 30) {
+                performanceHistory.shift();
+            }
+            
+            const chart = document.getElementById('performanceChart');
+            const maxOps = Math.max(...performanceHistory, 1000);
+            
+            chart.innerHTML = performanceHistory.map((ops, index) => {
+                const height = (ops / maxOps) * 100;
+                return `<div class="chart-bar" style="height: ${height}px;" data-value="${Math.round(ops)} ops/s"></div>`;
+            }).join('');
+        }
+
+        // Add log entry to activity monitor
+        function addLogEntry(entry) {
+            const logContainer = document.getElementById('activityLog');
+            const logElement = document.createElement('div');
+            logElement.className = `log-entry log-${entry.level}`;
+            
+            logElement.innerHTML = `
+                <span class="log-timestamp">${entry.timestamp}</span>
+                <span class="log-type">${entry.type}</span>
+                <span class="log-message">${entry.action}: ${entry.details}</span>
+            `;
+            
+            logContainer.appendChild(logElement);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // Keep only last 100 entries
+            const entries = logContainer.querySelectorAll('.log-entry');
+            if (entries.length > 100) {
+                entries[0].remove();
+            }
+        }
+
+        // Clear activity log
+        function clearActivityLog() {
+            const logContainer = document.getElementById('activityLog');
+            logContainer.innerHTML = '';
+            addLogEntry({
+                timestamp: new Date().toLocaleTimeString(),
+                type: 'SYSTEM',
+                action: 'Log cleared',
+                details: 'Activity monitor reset',
+                level: 'info'
+            });
+        }
+
+        // Enable controls after filter initialization
+        function enableControls() {
+            const buttons = ['addBtn', 'add10Btn', 'add100Btn', 'checkBtn', 'fpTestBtn'];
+            buttons.forEach(id => {
+                document.getElementById(id).disabled = false;
+            });
+        }
+
+        // Toggle view (grid/list)
+        function toggleView(view) {
+            currentView = view;
+            
+            // Update toggle buttons
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.toggle-btn').classList.add('active');
+            
+            // Update bit array display
+            const bitArray = document.getElementById('bitArray');
+            if (view === 'list') {
+                bitArray.style.gridTemplateColumns = 'repeat(40, 1fr)';
+            } else {
+                bitArray.style.gridTemplateColumns = 'repeat(20, 1fr)';
+            }
+        }
+
+        // Keyboard event listeners
+        document.getElementById('itemInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') addSingleItem();
+        });
+
+        document.getElementById('checkInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkSingleItem();
+        });
+
+        // Auto-update stats every 3 seconds
+        setInterval(() => {
+            if (bloomFilter) {
+                updateStats();
+            }
+        }, 3000);
+
+        // Initialize with welcome message
+        document.addEventListener('DOMContentLoaded', function() {
+            addLogEntry({
+                timestamp: new Date().toLocaleTimeString(),
+                type: 'SYSTEM',
+                action: 'Welcome to Bloom Filter Lab',
+                details: 'Configure and initialize your filter to begin',
+                level: 'info'
+            });
+            
+            // Focus on first input
+            document.getElementById('expectedItems').focus();
+        });
+
+        // Export for debugging
+        window.bloomFilterLab = {
+            getFilter: () => bloomFilter,
+            getStats: () => bloomFilter?.getStats(),
+            getPerformanceHistory: () => performanceHistory
+        };
+    </script>
+</body>
+</html>
